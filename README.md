@@ -5,7 +5,7 @@
 
 ## Overview
 
-This repository contains the code, results, and paper for a systematic benchmark comparing five neural architectures for naturalistic EEG decoding using the [HBN movie-watching dataset](https://github.com/shirazi2024hbn):
+This repository contains the code, results, and paper for a systematic benchmark comparing five neural architectures for naturalistic EEG decoding using the HBN movie-watching dataset:
 
 | Model | Description |
 |-------|-------------|
@@ -13,7 +13,7 @@ This repository contains the code, results, and paper for a systematic benchmark
 | LSTM | Recurrent baseline |
 | EEGXF | Stabilized EEG Transformer (introduced here) |
 | S4 | Structured State Space model |
-| **S5** | Simplified S4: best parameter efficiency |
+| **S5** | Simplified S4 — best parameter efficiency |
 
 Models are evaluated across segment lengths from **8 s to 128 s** on a 4-class movie classification task, plus three generalization tests: zero-shot cross-task, cross-frequency, and leave-one-subject-out (LOSO).
 
@@ -41,7 +41,7 @@ eeg-s5-benchmark/
 │   ├── analyze_results.py
 │   ├── analyze_publication_results.py
 │   └── statistical_significance_analysis.py
-├── figures/                     # Key paper figures (PNG + PDF)
+├── figures/                     # Paper figures (PNG + PDF)
 └── results/                     # Experiment result JSONs
 ```
 
@@ -71,35 +71,73 @@ python analysis/generate_figures.py --results_dir results/
 
 ## Results
 
-### Accuracy vs. Segment Length
+### Fig. 1 — Accuracy vs. Segment Length
 
-![Accuracy vs Segment Length](figures/accuracy_vs_segment_length.png)
+![Fig 1](figures/fig1_accuracy_vs_segment_length.png)
 
-All models improve with longer context. S5 and CNN dominate at 64 s+, with S5 using ~20× fewer parameters.
+S5 and CNN demonstrate the strongest performance scaling with temporal context. The x-axis is log-scaled.
 
-### Full Results Table
+### Table 1 — Main Results (4-class Subject-Mixed Classification)
 
-![Comprehensive Results](figures/comprehensive_results_table.png)
+32/64/128 s results are mean ± std over 3 seeds; 8/16 s are single-seed.
 
-### Efficiency–Accuracy Tradeoff
+| Model | Seg (s) | Acc. (%) | F1 | Time (min) | Params |
+|-------|---------|----------|----|------------|--------|
+| **S5** | 8 | 55.3 | 0.553 | 3.9 | **183K** |
+| | 16 | 61.3 | 0.614 | 5.1 | **183K** |
+| | 32 | 94.4 ± 0.7 | 0.930 ± 0.013 | 19.9 ± 2.2 | **183K** |
+| | **64** | **98.7 ± 0.6** | **0.978 ± 0.011** | 25.8 ± 6.2 | **183K** |
+| | 128 | 95.8 ± 0.6 | 0.929 ± 0.007 | 17.8 ± 4.8 | **183K** |
+| **EEGXF** | 8 | 60.3 | 0.605 | 16.2 | 217K |
+| | 16 | 63.4 | 0.635 | 22.9 | 217K |
+| | 32 | 80.1 ± 2.0 | 0.748 ± 0.029 | 35.8 ± 0.3 | 217K |
+| | 64 | 84.2 ± 0.6 | 0.749 ± 0.010 | 11.6 ± 0.1 | 217K |
+| | 128 | 76.7 ± 1.5 | 0.526 ± 0.032 | 6.3 ± 2.6 | 217K |
+| **CNN** | 8 | 52.8 | 0.531 | **0.9** | 4.4M |
+| | 16 | 64.7 | 0.650 | **1.2** | 4.4M |
+| | 32 | 94.5 ± 0.3 | 0.931 ± 0.004 | **7.5 ± 0.02** | 4.4M |
+| | 64 | 97.2 ± 0.9 | 0.953 ± 0.018 | **4.9 ± 0.6** | 4.4M |
+| | 128 | 89.2 ± 1.5 | 0.684 ± 0.097 | **6.4 ± 0.06** | 4.4M |
 
-![Efficiency Pareto](figures/s5_efficiency_pareto.png)
+### Table 2 — Inter-Movie Confusion at 64 s
 
-### Frequency Robustness (Zero-shot Cross-frequency)
+| Model | Movie Confusion Rate (%) ↓ |
+|-------|--------------------------|
+| **S5** | **2.7%** |
+| **CNN** | **2.7%** |
+| EEGXF | 32.4% |
 
-![Frequency Robustness](figures/frequency_robustness_comparison.png)
+### Fig. 2 — Performance–Efficiency Tradeoff at 64 s
 
-EEGXF is more stable under frequency shift; S5 tends to be overconfident on out-of-distribution inputs.
+![Fig 3](figures/fig3_performance_tradeoff.png)
 
-Pre-computed result JSONs are in `results/`. Each file is named `{Model}_{SegmentLength}s_gpu{N}_exp{N}.json`.
+Accuracy vs. parameters (log-scale); marker size ∝ training time. S5 occupies the optimal top-left quadrant.
 
-### Figures
+### Fig. 3 — Cross-Frequency Robustness (Zero-shot)
 
-| Figure | Description |
-|--------|-------------|
-| `figures/fig1_accuracy_vs_segment_length.pdf` | Accuracy vs. segment length (paper Fig. 1) |
-| `figures/fig2_performance_vs_efficiency.pdf` | Performance vs. efficiency tradeoff (paper Fig. 2) |
-| `figures/fig3_performance_tradeoff.pdf` | Robustness tradeoff (paper Fig. 3) |
+![Cross-frequency Robustness](figures/frequency_robustness_comparison_paper.png)
+
+Models trained at 250 Hz, tested zero-shot at 128 Hz and 64 Hz. EEGXF exhibits superior robustness; S5 drops >18 pp.
+
+### Table 3 — Leave-One-Subject-Out (LOSO) on 32 s Segments
+
+| Model | Mean Acc. (%) | Std. Dev. | Folds | Time/Fold |
+|-------|--------------|-----------|-------|-----------|
+| **S5** | **55.9** | 15.9 | 60 | ~41 min |
+| EEGXF | 48.4 | 12.1 | 20 | ~52 min |
+
+S5 significantly outperformed EEGXF in accuracy (*p* < 0.01) and F1-score (*p* < 10⁻⁵).
+
+### Table 4 — Zero-Shot Cross-Task Generalization & Calibration
+
+| Model | Task Input | OOD Pred. | OOD Conf. | ECE (%) ↓ |
+|-------|-----------|-----------|-----------|-----------|
+| **S5** | Symbol Search | Movie 3 | 60.0% | **1.09 ± 0.12** |
+| | Contrast Change | Movie 3 | 60.0% | |
+| **EEGXF** | Symbol Search | Resting | **26.0%** | 13.41 ± 1.68 |
+| | Contrast Change | Resting | **26.0%** | |
+
+S5 makes overconfident errors on OOD tasks; EEGXF defaults to a conservative low-confidence "resting" prediction.
 
 ## Citation
 
