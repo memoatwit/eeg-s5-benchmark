@@ -1,7 +1,7 @@
 # EEG S5 Benchmark
 
 **Temporal Context and Architecture: A Benchmark for Naturalistic EEG Decoding**
-*Mehmet Ergezer — Wentworth Institute of Technology, ICASSP 2025/2026*
+*Mehmet Ergezer — Wentworth Institute of Technology, ICASSP 2026*
 
 ## Overview
 
@@ -13,7 +13,7 @@ This repository contains the code, results, and paper for a systematic benchmark
 | LSTM | Recurrent baseline |
 | EEGXF | Stabilized EEG Transformer (introduced here) |
 | S4 | Structured State Space model |
-| **S5** | Simplified S4 — best parameter efficiency |
+| **S5** | Simplified S4: best parameter efficiency |
 
 Models are evaluated across segment lengths from **8 s to 128 s** on a 4-class movie classification task, plus three generalization tests: zero-shot cross-task, cross-frequency, and leave-one-subject-out (LOSO).
 
