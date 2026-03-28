@@ -26,7 +26,13 @@ At 64 s, **S5 reaches 98.7% ± 0.6** accuracy using ~20× fewer parameters than 
 eeg-s5-benchmark/
 ├── train.py                     # Main training script (all 5 architectures)
 ├── models/
-│   └── eeg_transformer.py       # EEGXF — stabilized EEG Transformer
+│   ├── __init__.py              # Unified import: from models import S5Classifier
+│   ├── cnn.py                   # CNNClassifier
+│   ├── lstm.py                  # LSTMClassifier
+│   ├── transformer.py           # TransformerClassifier (standard)
+│   ├── eeg_transformer.py       # EEGXF — stabilized EEG Transformer (introduced here)
+│   ├── s4.py                    # OptimizedS4Classifier
+│   └── s5.py                    # S5Classifier
 ├── ablation/
 │   └── run_ablation.py          # Multi-GPU ablation study (3 seeds)
 ├── analysis/
@@ -35,13 +41,7 @@ eeg-s5-benchmark/
 │   ├── analyze_results.py
 │   ├── analyze_publication_results.py
 │   └── statistical_significance_analysis.py
-├── results/                     # Experiment result JSONs
-├── paper/
-│   ├── main_s5_shorter.tex      # Submitted paper
-│   ├── main_s5.tex              # Extended draft
-│   ├── refs.bib
-│   └── figures/                 # All paper figures (PDF + PNG)
-└── .gitignore
+└── results/                     # Experiment result JSONs
 ```
 
 ## Usage
