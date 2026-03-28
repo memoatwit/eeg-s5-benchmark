@@ -1,6 +1,6 @@
 # EEG S5 Benchmark
 
-**Temporal Context and Architecture: A Benchmark for Naturalistic EEG Decoding**
+**Temporal Context and Architecture: A Benchmark for Naturalistic EEG Decoding**   
 *Mehmet Ergezer, Wentworth Institute of Technology, ICASSP 2026*
 
 ## Overview
