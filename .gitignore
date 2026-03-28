@@ -46,6 +46,9 @@ Thumbs.db
 .idea/
 *.swp
 
+# Paper folder (tracked separately)
+paper/
+
 # LaTeX build artifacts
 *.aux
 *.bbl
