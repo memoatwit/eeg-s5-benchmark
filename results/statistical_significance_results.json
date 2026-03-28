@@ -1,0 +1,85 @@
+{
+  "experiment_info": {
+    "comparison_folds": 20,
+    "models_compared": [
+      "S5",
+      "EEGTransformer_Lightweight"
+    ],
+    "metrics_tested": [
+      "Accuracy",
+      "F1-Score"
+    ]
+  },
+  "paired_t_test_accuracy": {
+    "metric": "Accuracy",
+    "t_statistic": 3.128340515708949,
+    "p_value": 0.00553395036178863,
+    "mean_s5": 0.5902561277756326,
+    "mean_eegt": 0.48425293793606317,
+    "std_s5": 0.17693307469936398,
+    "std_eegt": 0.12411348968962554,
+    "mean_difference": 0.10600318983956947,
+    "cohens_d": 0.6995182049891959,
+    "significant": true
+  },
+  "paired_t_test_f1": {
+    "metric": "F1-Score",
+    "t_statistic": 7.050938941532118,
+    "p_value": 1.0367032837231287e-06,
+    "mean_s5": 0.4490499400389532,
+    "mean_eegt": 0.19890977884434732,
+    "std_s5": 0.1964955123716609,
+    "std_eegt": 0.18865451390990903,
+    "mean_difference": 0.2501401611946059,
+    "cohens_d": 1.576637877846623,
+    "significant": true
+  },
+  "mcnemar_test_accuracy": {
+    "metric": "Accuracy (>50%)",
+    "statistic": 0.0,
+    "p_value": 0.00048828125,
+    "contingency_table": [
+      [
+        2,
+        12
+      ],
+      [
+        0,
+        6
+      ]
+    ],
+    "significant": true
+  },
+  "mcnemar_test_accuracy_60": {
+    "metric": "Accuracy (>60%)",
+    "statistic": 0.0,
+    "p_value": 0.0078125,
+    "contingency_table": [
+      [
+        1,
+        8
+      ],
+      [
+        0,
+        11
+      ]
+    ],
+    "significant": true
+  },
+  "mcnemar_test_f1": {
+    "metric": "F1-Score (>40%)",
+    "statistic": 0.0,
+    "p_value": 0.0009765625,
+    "contingency_table": [
+      [
+        1,
+        11
+      ],
+      [
+        0,
+        8
+      ]
+    ],
+    "significant": true
+  }
+}

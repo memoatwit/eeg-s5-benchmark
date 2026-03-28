@@ -1,0 +1,40 @@
+{
+  "experiment_info": {
+    "experiment_id": 35,
+    "model": "UltraSimplifiedEEGTransformer",
+    "domain": "temporal",
+    "segment_length": 128,
+    "gpu_id": 0,
+    "timestamp": "2025-08-03T06:57:38.690472",
+    "data_type": "HBN",
+    "fix_applied": "input_dim_corrected_to_64_channels"
+  },
+  "model_info": {
+    "n_parameters": 842628,
+    "input_dim": 64,
+    "architecture_type": "UltraSimplifiedEEGTransformer"
+  },
+  "performance_metrics": {
+    "best_val_accuracy": 0.7727272727272727,
+    "test_accuracy": 0.7467532467532467,
+    "test_f1": 0.5951197712026962,
+    "epochs_trained": 192
+  },
+  "computational_metrics": {
+    "training_time": 1405.6748735904694,
+    "memory_usage_mb": 819.15771484375,
+    "gpu_utilization": 0
+  },
+  "experimental_setup": {
+    "hyperparameters": {
+      "learning_rate": 0.0005,
+      "weight_decay": 1e-05,
+      "batch_size": 6,
+      "patience": 60,
+      "max_epochs": 200,
+      "optimizer": "AdamW",
+      "scheduler": "CosineAnnealingLR",
+      "dropout": 0.1
+    }
+  }
+}

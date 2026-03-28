@@ -1,0 +1,40 @@
+{
+  "experiment_info": {
+    "experiment_id": 22,
+    "model": "EEGTransformer",
+    "domain": "temporal",
+    "segment_length": 16,
+    "gpu_id": 1,
+    "timestamp": "2025-07-23T10:10:43.567980",
+    "data_type": "HBN",
+    "fix_applied": "input_dim_corrected_to_64_channels"
+  },
+  "model_info": {
+    "n_parameters": 7109572,
+    "input_dim": 64,
+    "architecture_type": "EEGTransformer"
+  },
+  "performance_metrics": {
+    "best_val_accuracy": 0.453125,
+    "test_accuracy": 0.459375,
+    "test_f1": 0.4321432058049338,
+    "epochs_trained": 50
+  },
+  "computational_metrics": {
+    "training_time": 4674.008856058121,
+    "memory_usage_mb": 22552.4267578125,
+    "gpu_utilization": 1
+  },
+  "experimental_setup": {
+    "hyperparameters": {
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 16,
+      "patience": 15,
+      "max_epochs": 50,
+      "optimizer": "AdamW",
+      "scheduler": "ReduceLROnPlateau",
+      "dropout": 0.1
+    }
+  }
+}

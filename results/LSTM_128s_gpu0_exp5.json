@@ -1,0 +1,40 @@
+{
+  "experiment_info": {
+    "experiment_id": 5,
+    "model": "LSTM",
+    "domain": "temporal",
+    "segment_length": 128,
+    "gpu_id": 0,
+    "timestamp": "2025-07-22T09:45:49.021427",
+    "data_type": "HBN",
+    "fix_applied": "input_dim_corrected_to_64_channels"
+  },
+  "model_info": {
+    "n_parameters": 627332,
+    "input_dim": 64,
+    "architecture_type": "LSTM"
+  },
+  "performance_metrics": {
+    "best_val_accuracy": 0.5194805194805194,
+    "test_accuracy": 0.4155844155844156,
+    "test_f1": 0.2966487535453053,
+    "epochs_trained": 16
+  },
+  "computational_metrics": {
+    "training_time": 780.2883877754211,
+    "memory_usage_mb": 5698.3583984375,
+    "gpu_utilization": 0
+  },
+  "experimental_setup": {
+    "hyperparameters": {
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 6,
+      "patience": 15,
+      "max_epochs": 50,
+      "optimizer": "AdamW",
+      "scheduler": "ReduceLROnPlateau",
+      "dropout": 0.1
+    }
+  }
+}

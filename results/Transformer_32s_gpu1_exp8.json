@@ -1,0 +1,40 @@
+{
+  "experiment_info": {
+    "experiment_id": 8,
+    "model": "Transformer",
+    "domain": "temporal",
+    "segment_length": 32,
+    "gpu_id": 1,
+    "timestamp": "2025-07-22T13:14:31.124163",
+    "data_type": "HBN",
+    "fix_applied": "input_dim_corrected_to_64_channels"
+  },
+  "model_info": {
+    "n_parameters": 6334340,
+    "input_dim": 64,
+    "architecture_type": "Transformer"
+  },
+  "performance_metrics": {
+    "best_val_accuracy": 0.559375,
+    "test_accuracy": 0.521875,
+    "test_f1": 0.5219454676823471,
+    "epochs_trained": 50
+  },
+  "computational_metrics": {
+    "training_time": 11796.772089004517,
+    "memory_usage_mb": 11358.9482421875,
+    "gpu_utilization": 1
+  },
+  "experimental_setup": {
+    "hyperparameters": {
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 12,
+      "patience": 15,
+      "max_epochs": 50,
+      "optimizer": "AdamW",
+      "scheduler": "ReduceLROnPlateau",
+      "dropout": 0.1
+    }
+  }
+}

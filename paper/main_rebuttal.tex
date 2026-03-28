@@ -1,0 +1,221 @@
+\documentclass{article}
+\usepackage{spconf,amsmath,graphicx,amssymb,cite,booktabs,url}
+\usepackage{multirow}
+\usepackage{enumitem}
+\setlist{nosep} % Tighter lists, but not crushed
+
+% Example definitions.
+% ––––––––––
+\def\x{{\mathbf x}}
+\def\L{{\cal L}}
+
+\newcommand{\eegtrans}{EEGXF}
+
+% Title.
+% ——
+\title{TEMPORAL CONTEXT AND ARCHITECTURE:\\A BENCHMARK FOR NATURALISTIC EEG DECODING}
+
+% Author.
+% ------
+% Note: Using anonymous for review if required, otherwise uncomment below
+\name{Mehmet Ergezer}
+\address{School of Computing \& Data Science, Wentworth Institute of Technology \\
+         Boston, MA USA \\
+         Email: ergezerm@wit.edu}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We investigate how model architecture and temporal context interact in naturalistic EEG decoding. Using the Healthy Brain Network dataset, we benchmark five architectures—CNN, LSTM, Transformer, \eegtrans{} (a stabilized Transformer), and S5 (a structured state-space model)—on a 4-class movie classification task across segment lengths from 8\,s to 128\,s. While CNNs perform well on short segments, both S5 and CNNs excel at longer durations, though S5 is significantly more parameter-efficient. To assess real-world generalization, we conduct zero-shot cross-task, cross-frequency, and leave-one-subject-out (LOSO) testing. These reveal not only significant performance drops but also fundamental differences in uncertainty handling. S5 tends to make high-confidence errors on out-of-distribution data, while \eegtrans{} collapses to a neutral, low-confidence state, indicating superior uncertainty handling. Our results highlight a critical trade-off between S5's efficiency and \eegtrans's safer generalization. We release code and models for reproducibility.
+\end{abstract}
+
+\begin{keywords}
+EEG decoding, State-space models (S4/S5), Transformers, Naturalistic stimuli, Robustness
+\end{keywords}
+
+\section{Introduction}
+\label{sec:intro}
+
+Decoding brain activity from EEG during naturalistic tasks like movie-watching is a challenging problem, requiring models that capture long-range temporal dependencies from noisy, continuous recordings~\cite{shirazi2024hbn}. While deep learning has been widely applied to EEG, traditional architectures face fundamental trade-offs. CNNs are efficient but constrained by local receptive fields~\cite{roy2019deep, schirrmeister2017deep}, while Transformers offer global context via attention~\cite{vaswani2017attention} but suffer from quadratic scaling in time and memory.
+
+To address these limitations, Structured State-Space Models (SSMs) like S4~\cite{gu2022efficientlymodelinglongsequences} and S5/Mamba~\cite{gu2023mamba} have emerged, offering a compelling balance of long-range modeling and near-linear computational complexity. Recent studies have applied SSMs to EEG foundation models~\cite{wang2025eegmamba}, drowsiness detection~\cite{siddhad2024drowzee}, and clinical tasks~\cite{tran2024eegssm, li2025dgmamba}. However, a systematic comparison of how these modern architectures perform against varying temporal context lengths has been missing.
+
+In this work, we investigate the interplay between model architecture and temporal context. We hypothesize that sequence models like S5 and Transformers benefit more from longer EEG segments than local models like CNNs. To test this, we benchmark five architectures on a 4-class naturalistic decoding task using HBN data across segments from 8\,s to 128\,s, including a modernized Transformer baseline, \eegtrans{}, to ensure a robust comparison. While other notable architectures like EEG-Conformer~\cite{song2023eeg} exist, we focus on fundamental architectural classes (CNN, RNN, SSM, Transformer) to isolate the impact of inductive bias, acknowledging the exclusion of hybrid models as a scope limitation. To move beyond simple accuracy, we introduce a suite of challenging generalization tests across unseen tasks, frequencies, and subjects. This evaluation characterizes a fundamental trade-off: S5 offers state-of-the-art speed and accuracy but is prone to overconfident errors on out-of-distribution data, whereas \eegtrans{} provides greater robustness at a higher computational cost.
+
+\section{Dataset and Preprocessing}
+\label{sec:data}
+
+We utilize EEG data from the Healthy Brain Network (HBN) initiative \cite{shirazi2024hbn}, specifically recordings from the movie-watching tasks (``Despicable Me,'' ``Diary of a Wimpy Kid,'' ``The Present'') and a resting-state baseline.
+The raw EEG data was downsampled to 250\,Hz, and the first 64 channels were selected. Our preprocessing pipeline consisted of:
+\begin{enumerate}[label=\arabic*., leftmargin=*]
+    \item \textbf{Filtering:} Signals were band-passed (1-50Hz). For downsampling experiments, an anti-aliasing low-pass filter (cutoff $0.45 \times$ target rate) was applied before resampling.
+    \item \textbf{Re-referencing:} Common average reference.
+    \item \textbf{Split \& Segmentation:} To prevent data leakage, continuous recordings were \textbf{first split} into training (60\%), validation (20\%), and test (20\%) sets. Only then were signals segmented into $T$-second windows with 50\% overlap. This ensures no overlapping windows span across train-test splits.
+    \item \textbf{Normalization:} Each segment was standardized on a per-channel basis (zero mean, unit variance).
+\end{enumerate}
+
+Our benchmark uses data from 40 subjects, yielding over 15,000 EEG segments for the 4-class classification task.
+
+\section{Model Architectures}
+\label{sec:models}
+
+All models accept input tensors of shape (batch, 64, $T$), where $T$ varies with segment length (e.g., $T=2000$ for 8\,s).
+
+\subsection{Structured State-Space Model (S5)}
+Our S5 classifier builds on recent advances in state-space modeling. It is governed by a continuous-time linear state-space model:
+\begin{align}
+\mathbf{h}'(t) &= \mathbf{A} \mathbf{h}(t) + \mathbf{B} \mathbf{u}(t) \\
+\mathbf{y}(t) &= \mathbf{C} \mathbf{h}(t) + \mathbf{D} \mathbf{u}(t)
+\end{align}
+In contrast to S4, which computes output via convolutional kernels in the frequency domain, S5 directly diagonalizes the state matrix $\mathbf{A}$ to enable efficient time-domain parallel scan computation.
+The typical S5 configuration uses 3 layers and a hidden dimension of 192. Our implementation consists of an input projection, a stack of 2--4 bidirectional S5 blocks, global average pooling, and a linear classifier. 
+
+\subsection{Baseline Models}
+We compare S5 against baselines including a temporal \textbf{CNN} and a 2-layer bidirectional \textbf{LSTM}.
+
+\subsection{\eegtrans{}: A Stabilized Transformer Baseline} \label{sec:\eegtrans}
+Standard Transformers often suffer from training instability on noisy EEG data. To create a robust baseline, we developed \eegtrans{}, an \textbf{Ultra-Simplified EEG Transformer}. Key modifications include a simplified input projection with ReLU activation, multiple BatchNorm layers for stabilization, a conservative encoder with \textit{norm\_first=True}, and high-variance weight initialization. Based on hyperparameter sweeps, we utilized a compact configuration (2 layers, 4 heads, $d=128$, dropout=0.1) which outperformed larger variants. To aggregate temporal features, \eegtrans{} replaces global pooling with a learned attention pooling mechanism.
+
+\section{Experiments}
+\label{sec:exp}
+
+Models were trained for up to 100 epochs using the AdamW optimizer (LR $10^{-3}$, weight decay $10^{-4}$), a `ReduceLROnPlateau` scheduler, and early stopping. We used gradient clipping and EMA to stabilize training. To ensure statistical robustness, results for 32\,s, 64\,s, and 128\,s segments are reported as mean~$\pm$~std over three random seeds; shorter segments are from a single seed. All experiments were conducted on a workstation with dual NVIDIA RTX A6000 GPUs. Code is available at an anonymized link\footnote{\url{https://anonymous.4open.science/r/eeg-s5-benchmark}}.
+
+\section{Results}
+\label{sec:results}
+
+Our primary results on subject-mixed splits are summarized in Figure~\ref{fig:segcurve} and Table~\ref{tab:results}. The overview figure includes all five architectures, while the table focuses on our three primary contenders. The experiment confirms our hypothesis: models with long-range capacity benefit more from temporal context. S5's accuracy scales best, rising from 55.3\% at 8\,s to a peak of 95.2\%~$\pm$~1.7 at 64\,s. The CNN baseline is also a strong performer (97.2\%~$\pm$~0.9 at 64\,s). However, as shown in Figure~\ref{fig:efficiency_scatter}, S5 achieves this performance with $\sim$20$\times$ fewer parameters and is more stable at the longest context (128\,s).
+
+The LSTM and simplified S4 baselines were not competitive. S4 was prohibitively slow (over 7 hours for 64\,s vs.\ S5's $\sim$10 min).
+
+\begin{figure}[t]
+  \centering
+    \includegraphics[width=0.95\linewidth]{fig1_accuracy_vs_segment_length.pdf}
+  \caption{Test accuracy versus segment length (8–128\,s). S5 and CNN demonstrate the strongest performance scaling with temporal context. The x-axis is log-scaled.}
+  \label{fig:segcurve}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \caption{Performance on 4-class subject-mixed EEG classification. 32/64/128\,s are mean$\pm$std over 3 seeds; 8/16s are single-seed.}
+  \label{tab:results}
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{lrrrrr}
+    \toprule
+    \textbf{Model} & \textbf{Seg (s)} & \textbf{Acc. (\%)} & \textbf{F1} & \textbf{Time (min)} & \textbf{Params} \\
+    \midrule
+    \textbf{S5} & 8 & 55.3 & 0.553 & 3.9 & \textbf{183K} \\
+    (SSM) & 16 & 61.3 & 0.614 & 5.1 & \textbf{183K} \\
+     & 32 & 94.4 $\pm$ 0.7 & .930 $\pm$ .013 & 19.9 $\pm$ 2.2 & \textbf{183K} \\
+     & 64 & \textbf{98.7 $\pm$ 0.6} & \textbf{.978 $\pm$ .011} & 25.8 $\pm$ 6.2 & \textbf{183K} \\
+     & 128 & \textbf{95.8 $\pm$ 0.6} & .929 $\pm$ .007 & 17.8 $\pm$ 4.8 & \textbf{183K} \\
+    \midrule
+    \eegtrans{} & 8 & 60.3 & 0.605 & 16.2 & 217K \\
+    (Transformer) & 16 & 63.4 & 0.635 & 22.9 & 217K \\
+     & 32 & 80.1 $\pm$ 2.0 & .748 $\pm$ .029 & 35.8 $\pm$ 0.3 & 217K \\
+     & 64 & 84.2 $\pm$ 0.6 & .749 $\pm$ .010 & 11.6 $\pm$ 0.1 & 217K \\
+     & 128 & 76.7 $\pm$ 1.5 & .526 $\pm$ .032 & 6.3 $\pm$ 2.6 & 217K \\
+    \midrule
+    CNN & 8 & 52.8 & 0.531 & \textbf{0.9} & 4.4M \\
+    (Local) & 16 & 64.7 & 0.650 & \textbf{1.2} & 4.4M \\
+     & 32 & 94.5 $\pm$ 0.3 & .931 $\pm$ .004 & \textbf{7.5 $\pm$ 0.02} & 4.4M \\
+     & 64 & 97.2 $\pm$ 0.9 & .953 $\pm$ .018 & \textbf{4.9 $\pm$ 0.6} & 4.4M \\
+     & 128 & 89.2 $\pm$ 1.5 & .684 $\pm$ .097 & \textbf{6.4 $\pm$ 0.06} & 4.4M \\
+    \bottomrule
+  \end{tabular}
+  }
+\end{table}
+
+To further analyze model behavior, we examined confusion patterns at 64\,s (Table~\ref{tab:confusion_summary}). Both S5 and CNN demonstrate high precision. In contrast, \eegtrans{} exhibits significant confusion between movies (32.4\%), explaining its lower F1-score.
+
+\begin{table}[h]
+\centering
+\caption{Inter-movie confusion analysis at 64\,s segments. Metric is \% of movie segments incorrectly classified as a different movie.}
+\label{tab:confusion_summary}
+\resizebox{0.8\columnwidth}{!}{%
+\begin{tabular}{lc}
+\toprule
+\textbf{Model} & \textbf{Movie Confusion Rate (\%) $\downarrow$} \\
+\midrule
+S5 & \textbf{2.7\%} \\
+CNN & \textbf{2.7\%} \\
+\eegtrans{} & 32.4\% \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.98\linewidth]{fig3_performance_tradeoff.pdf}
+  \caption{Performance-efficiency trade-off at 64\,s segments (single seed). Accuracy vs. parameters (log-scale), marker size $\propto$ training time. S5 occupies the optimal top-left quadrant.}
+  \label{fig:efficiency_scatter}
+\end{figure}
+
+\subsection{Cross-Frequency Robustness}
+To assess generalization across EEG sampling rates, we conducted a zero-shot evaluation on subject-independent splits. Models were trained at 250Hz and tested on signals downsampled to 128Hz and 64Hz using FIR filtering. The results are shown in Figure~\ref{fig:crossfreq_bar}. S5's accuracy drops significantly (>18pp), while \eegtrans{} remains remarkably stable (<2\% drop). This reveals a key trade-off: S5 offers peak performance, but \eegtrans{} is preferable for variable sampling rates.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[trim={0 0 0 1.8cm},clip, width=0.98\linewidth]{frequency_robustness_comparison.pdf}
+  \caption{Zero-shot generalization performance at different sampling frequencies. \eegtrans{} exhibits superior robustness.}
+  \label{fig:crossfreq_bar}
+\end{figure}
+
+\subsection{Leave-One-Subject-Out Generalization}
+We conducted a full leave-one-subject-out (LOSO) evaluation on 32\,s segments. Table~\ref{tab:loso_results} confirms \textbf{S5 is superior for cross-subject generalization} (55.9\%). Across 20 matched folds, S5 significantly outperformed \eegtrans{} in accuracy ($p < 0.01$) and F1-score ($p < 10^{-5}$), with a McNemar test confirming S5 is more likely to exceed chance ($\chi^2=12.0, p < 0.001$).
+
+\begin{table}[h]
+\centering
+\caption{Leave-One-Subject-Out (LOSO) performance on 32\,s segments across 40 subjects.}
+\label{tab:loso_results}
+\resizebox{0.9\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Mean Acc. (\%)} & \textbf{Std. Dev.} & \textbf{Folds} & \textbf{Time/Fold} \\
+\midrule
+\textbf{S5} & \textbf{55.9} & 15.9 & 60 & \textasciitilde41 min \\
+\eegtrans{} & 48.4 & 12.1 & 20 & \textasciitilde52 min \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\subsection{Zero-Shot Cross-Task Generalization}
+We evaluated movie-trained models on three out-of-distribution (OOD) active tasks ($N=245$ segments). The results (Table~\ref{tab:cross_task}) reveal a striking difference. \textbf{S5 exhibited overconfident specialization}, consistently misclassifying OOD tasks as `Movie 3' with high confidence (60.0\%). In contrast, \textbf{\eegtrans{} demonstrated a ``conservative collapse,''} identifying OOD tasks as unfamiliar by defaulting to its most neutral class (`Resting State') with low confidence (26.0\%).
+
+Calibration metrics on in-distribution data (Table~\ref{tab:calibration}) further support this. While S5 is better calibrated for known tasks (lowest ECE), its failure to express uncertainty on novel inputs is a limitation compared to \eegtrans{}.
+
+\begin{table}[h]
+\centering
+\caption{Zero-shot cross-task generalization on OOD active tasks and calibration metrics on in-distribution (ID) data.}
+\label{tab:cross_task}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llcc|c}
+\toprule
+& & \multicolumn{2}{c|}{\textbf{OOD Behavior}} & \textbf{ID Calibration} \\
+\textbf{Model} & \textbf{Task Input} & \textbf{Pred.} & \textbf{Conf.} & \textbf{ECE (\%) $\downarrow$} \\
+\midrule
+\textbf{S5} & Symbol Search & Movie 3 & 60.0\% & \textbf{1.09 $\pm$ 0.12} \\
+ & Contrast Change & Movie 3 & 60.0\% & \\
+\midrule
+\textbf{\eegtrans{}} & Symbol Search & Resting & \textbf{26.0\%} & 13.41 $\pm$ 1.68 \\
+ & Contrast Change & Resting & \textbf{26.0\%} & \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:calibration} 
+\end{table}
+
+\section{Discussion and Conclusion}
+\label{sec:conclusion}
+
+Our systematic benchmark reveals a critical accuracy-efficiency-robustness trade-off in EEG decoding. S5 is exceptionally suited for learning long-range temporal patterns, achieving the highest accuracy and training speed in our benchmark. However, this efficiency comes at the cost of robustness. Our novel cross-task test demonstrates that S5 is prone to overconfident errors on unseen tasks. Conversely, \eegtrans{}'s ``conservative collapse'' represents superior uncertainty handling, a vital property for safety-critical BCI. This forces a practical choice: S5 for speed and accuracy in controlled settings, or \eegtrans{} for robustness in the wild.
+
+\clearpage
+\bibliographystyle{IEEEbib}
+\bibliography{refs}
+
+\end{document}

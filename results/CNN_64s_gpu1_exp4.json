@@ -1,0 +1,40 @@
+{
+  "experiment_info": {
+    "experiment_id": 4,
+    "model": "CNN",
+    "domain": "temporal",
+    "segment_length": 64,
+    "gpu_id": 1,
+    "timestamp": "2025-07-22T00:41:58.224980",
+    "data_type": "HBN",
+    "fix_applied": "input_dim_corrected_to_64_channels"
+  },
+  "model_info": {
+    "n_parameters": 4369668,
+    "input_dim": 64,
+    "architecture_type": "CNN"
+  },
+  "performance_metrics": {
+    "best_val_accuracy": 0.8376623376623377,
+    "test_accuracy": 0.9025974025974026,
+    "test_f1": 0.9001702701600452,
+    "epochs_trained": 50
+  },
+  "computational_metrics": {
+    "training_time": 241.06453037261963,
+    "memory_usage_mb": 612.81787109375,
+    "gpu_utilization": 1
+  },
+  "experimental_setup": {
+    "hyperparameters": {
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 10,
+      "patience": 15,
+      "max_epochs": 50,
+      "optimizer": "AdamW",
+      "scheduler": "CosineAnnealingLR",
+      "dropout": 0.1
+    }
+  }
+}

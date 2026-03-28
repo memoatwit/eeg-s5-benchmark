@@ -1,0 +1,40 @@
+{
+  "experiment_info": {
+    "experiment_id": 11,
+    "model": "S4",
+    "domain": "temporal",
+    "segment_length": 8,
+    "gpu_id": 0,
+    "timestamp": "2025-07-22T23:10:40.711999",
+    "data_type": "HBN",
+    "fix_applied": "input_dim_corrected_to_64_channels"
+  },
+  "model_info": {
+    "n_parameters": 290068,
+    "input_dim": 64,
+    "architecture_type": "S4"
+  },
+  "performance_metrics": {
+    "best_val_accuracy": 0.55625,
+    "test_accuracy": 0.521875,
+    "test_f1": 0.5242999280375829,
+    "epochs_trained": 45
+  },
+  "computational_metrics": {
+    "training_time": 2205.5496871471405,
+    "memory_usage_mb": 18820.0302734375,
+    "gpu_utilization": 0
+  },
+  "experimental_setup": {
+    "hyperparameters": {
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 16,
+      "patience": 15,
+      "max_epochs": 50,
+      "optimizer": "AdamW",
+      "scheduler": "ReduceLROnPlateau",
+      "dropout": 0.1
+    }
+  }
+}
