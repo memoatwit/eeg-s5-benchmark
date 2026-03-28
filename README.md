@@ -41,6 +41,7 @@ eeg-s5-benchmark/
 │   ├── analyze_results.py
 │   ├── analyze_publication_results.py
 │   └── statistical_significance_analysis.py
+├── figures/                     # Key paper figures (PNG + PDF)
 └── results/                     # Experiment result JSONs
 ```
 
@@ -70,7 +71,35 @@ python analysis/generate_figures.py --results_dir results/
 
 ## Results
 
+### Accuracy vs. Segment Length
+
+![Accuracy vs Segment Length](figures/accuracy_vs_segment_length.png)
+
+All models improve with longer context. S5 and CNN dominate at 64 s+, with S5 using ~20× fewer parameters.
+
+### Full Results Table
+
+![Comprehensive Results](figures/comprehensive_results_table.png)
+
+### Efficiency–Accuracy Tradeoff
+
+![Efficiency Pareto](figures/s5_efficiency_pareto.png)
+
+### Frequency Robustness (Zero-shot Cross-frequency)
+
+![Frequency Robustness](figures/frequency_robustness_comparison.png)
+
+EEGXF is more stable under frequency shift; S5 tends to be overconfident on out-of-distribution inputs.
+
 Pre-computed result JSONs are in `results/`. Each file is named `{Model}_{SegmentLength}s_gpu{N}_exp{N}.json`.
+
+### Figures
+
+| Figure | Description |
+|--------|-------------|
+| `figures/fig1_accuracy_vs_segment_length.pdf` | Accuracy vs. segment length (paper Fig. 1) |
+| `figures/fig2_performance_vs_efficiency.pdf` | Performance vs. efficiency tradeoff (paper Fig. 2) |
+| `figures/fig3_performance_tradeoff.pdf` | Robustness tradeoff (paper Fig. 3) |
 
 ## Citation
 
